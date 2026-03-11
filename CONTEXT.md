@@ -19,7 +19,7 @@
 gym-backend/
 ├── src/
 │   ├── index.ts        # Worker principal (fetch handler)
-│   └── schema.ts       # Tablas Drizzle (alumnos, asistencias)
+│   └── schema.ts       # Tablas Drizzle
 ├── drizzle/            # Migraciones generadas (auto)
 ├── drizzle.config.ts   # Config de drizzle-kit
 ├── wrangler.jsonc      # Config de Cloudflare Workers
@@ -45,7 +45,7 @@ DATABASE_URL=postgresql://<user>:<pass>@<host>.neon.tech/<db>?sslmode=require&ch
 # Desarrollo local
 npx wrangler dev          # http://localhost:8787
 
-# Aplicar cambios de schema a Neon
+# Aplicar cambios de schema a Neon (PowerShell)
 $env:DATABASE_URL="<url>"; npx drizzle-kit push
 
 # Desplegar a Cloudflare
@@ -55,39 +55,13 @@ npx wrangler deploy
 npx wrangler types
 ```
 
-> **Nota PowerShell**: `drizzle-kit push` necesita que `DATABASE_URL` esté en el entorno de la shell porque drizzle-kit no lee `.dev.vars`. Usa `$env:DATABASE_URL="..."` antes del comando.
-
----
-
-## Schema Actual
-
-### `alumnos`
-| Columna | Tipo | Notas |
-|---------|------|-------|
-| `id` | UUID | PK, auto |
-| `short_id` | TEXT | Único, ej: `#A102` |
-| `nombre` | TEXT | — |
-| `dni` | TEXT | Único |
-| `anio_nacimiento` | INTEGER | Opcional |
-| `grupo` | TEXT | Ej: `Adultos mañanas` |
-| `med_paper` | BOOLEAN | Default `false` |
-| `consent_paper` | BOOLEAN | Default `false` |
-| `created_at` | TIMESTAMP | Auto |
-
-### `asistencias`
-| Columna | Tipo | Notas |
-|---------|------|-------|
-| `id` | SERIAL | PK |
-| `alumno_id` | UUID | FK → `alumnos.id` |
-| `fecha` | DATE | Auto (hoy) |
-| `hora` | TIME | Auto (ahora) |
-| `metodo` | TEXT | `'qr'` o `'button'` |
+> **Nota PowerShell**: `drizzle-kit push` necesita `DATABASE_URL` en el entorno de la shell. Usa `$env:DATABASE_URL="..."` antes del comando.
 
 ---
 
 ## CORS
 
-El Worker incluye headers CORS globales para que Angular (`localhost:4200`) pueda conectarse sin bloqueos:
+Headers globales para que Angular (`localhost:4200`) pueda conectarse sin bloqueos:
 
 ```ts
 const corsHeaders = {
@@ -102,22 +76,60 @@ const corsHeaders = {
 
 ---
 
+## Schema Actual (v2)
+
+### `usuarios`
+| Columna | Tipo | Notas |
+|---------|------|-------|
+| `id` | UUID | PK, auto |
+| `nombre` | TEXT | — |
+| `dni` | TEXT | Único |
+| `password_hash` | TEXT | Contraseña cifrada |
+| `rol` | TEXT | `'alumno'` o `'coach'` |
+| `email` | TEXT | Opcional, para el futuro |
+| `grupo` | TEXT | Ej: `Adultos mañanas` (null para coach) |
+| `med_paper` | BOOLEAN | Default `false` |
+| `consent_paper` | BOOLEAN | Default `false` |
+| `created_at` | TIMESTAMP | Auto |
+
+### `clases_programadas`
+| Columna | Tipo | Notas |
+|---------|------|-------|
+| `id` | SERIAL | PK |
+| `titulo` | TEXT | Ej: `Movilidad Articular` |
+| `fecha` | DATE | — |
+| `hora_inicio` | TIME | — |
+| `hora_fin` | TIME | — |
+| `plazas_maximas` | INTEGER | Opcional |
+
+### `reservas`
+| Columna | Tipo | Notas |
+|---------|------|-------|
+| `id` | SERIAL | PK |
+| `usuario_id` | UUID | FK → `usuarios.id` |
+| `clase_id` | INTEGER | FK → `clases_programadas.id` |
+| `fecha_reserva` | TIMESTAMP | Auto |
+| `estado` | TEXT | `'apuntado'` \| `'asistio'` \| `'falta'` |
+
+---
+
 ## Historial de Sesiones
 
 ### Sesión 1 — 2026-03-11
-- Creado `src/schema.ts` con tablas `alumnos` y `asistencias`
-- Creado `src/index.ts` con conexión Neon + endpoint de prueba `/`
+- Creado `src/schema.ts` (v1) con tablas `alumnos` y `asistencias`
+- Creado `src/index.ts` con conexión Neon + endpoint de prueba
 - Instalado `drizzle-kit` y creado `drizzle.config.ts`
-- Ejecutado `drizzle-kit push` → tablas creadas en Neon
-- Verificado: Worker responde `{ "status": "success", "alumnosEnBaseDeDatos": 0 }`
+- Ejecutado `drizzle-kit push` → tablas v1 creadas en Neon
+- Añadido CORS global para compatibilidad con Angular
 - Subido a GitHub: https://github.com/HugoCatl/gym-backend
-- Añadido CORS global para compatibilidad con Angular (`localhost:4200`)
+- **v2 del schema**: migrado a `usuarios`, `clases_programadas`, `reservas` (login + roles + reservas)
 
 ---
 
 ## Pendiente / Próximos Pasos
-- [ ] Rutas CRUD para alumnos (crear, listar, editar, eliminar)
-- [ ] Endpoint de registro de asistencia (`POST /asistencia`)
-- [ ] Generación de `shortId` automática (`#A001`, `#A002`...)
-- [ ] Endpoint de historial de asistencias por alumno
+- [ ] Endpoint `POST /auth/login` — devuelve JWT
+- [ ] Endpoint `POST /usuarios` — registro de alumno/coach
+- [ ] Endpoint `GET /clases` — lista de próximas clases
+- [ ] Endpoint `POST /reservas` — el alumno se apunta
+- [ ] Endpoint `GET /reservas/:claseId` — aforo por clase
 - [ ] Despliegue a producción en Cloudflare
