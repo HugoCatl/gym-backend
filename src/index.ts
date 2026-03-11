@@ -6,27 +6,38 @@ export interface Env {
   DATABASE_URL: string;
 }
 
+// Cabeceras estándar para permitir que Angular se conecte sin bloqueos
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
-    // Conectamos a Neon usando la URL que acabas de configurar
+    // 1. Manejar la petición "pre-flight" (Angular siempre hace esto antes de un POST/GET)
+    if (request.method === "OPTIONS") {
+      return new Response(null, { headers: corsHeaders });
+    }
+
     const sql = neon(env.DATABASE_URL);
     const db = drizzle(sql, { schema });
 
     try {
-      // Intentamos obtener los alumnos (estará vacío, pero confirmará la conexión)
       const listaAlumnos = await db.select().from(schema.alumnos);
 
       return new Response(JSON.stringify({
         status: "success",
-        mensaje: "¡Backend de MOVIMENT conectado!",
-        alumnosEnBaseDeDatos: listaAlumnos.length
+        mensaje: "¡Backend de MOVIMENT conectado y sin CORS!",
+        alumnosEnBaseDeDatos: listaAlumnos.length,
+        data: listaAlumnos
       }), {
-        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     } catch (error) {
       return new Response(JSON.stringify({ status: "error", error: String(error) }), { 
         status: 500,
-        headers: { "Content-Type": "application/json" }
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
   },

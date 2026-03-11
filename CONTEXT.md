@@ -85,6 +85,23 @@ npx wrangler types
 
 ---
 
+## CORS
+
+El Worker incluye headers CORS globales para que Angular (`localhost:4200`) pueda conectarse sin bloqueos:
+
+```ts
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type",
+};
+```
+
+- Preflight `OPTIONS` respondido con `null` + corsHeaders
+- Todos los responses (éxito y error) incluyen `...corsHeaders`
+
+---
+
 ## Historial de Sesiones
 
 ### Sesión 1 — 2026-03-11
@@ -93,6 +110,8 @@ npx wrangler types
 - Instalado `drizzle-kit` y creado `drizzle.config.ts`
 - Ejecutado `drizzle-kit push` → tablas creadas en Neon
 - Verificado: Worker responde `{ "status": "success", "alumnosEnBaseDeDatos": 0 }`
+- Subido a GitHub: https://github.com/HugoCatl/gym-backend
+- Añadido CORS global para compatibilidad con Angular (`localhost:4200`)
 
 ---
 
