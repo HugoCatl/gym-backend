@@ -61,12 +61,12 @@ npx wrangler types
 
 ## CORS
 
-Headers globales para que Angular (`localhost:4200`) pueda conectarse sin bloqueos:
+Headers globales para que Angular (`localhost:4200`) y la PWA puedan conectarse sin bloqueos:
 
 ```ts
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type",
 };
 ```
@@ -124,12 +124,17 @@ const corsHeaders = {
 - Subido a GitHub: https://github.com/HugoCatl/gym-backend
 - **v2 del schema**: migrado a `usuarios`, `clases_programadas`, `reservas` (login + roles + reservas)
 
+### Sesión 2 — 2026-03-14
+- Creados endpoints en `src/index.ts` para conectar frontend y backend:
+  - `POST /api/login` (login de alumnos y coach)
+  - `GET/POST/PUT /api/usuarios` (gestión de usuarios)
+  - `GET/POST /api/clases` (gestión de clases)
+  - `GET/POST /api/reservas` (reservas de alumnos)
+
 ---
 
 ## Pendiente / Próximos Pasos
-- [ ] Endpoint `POST /auth/login` — devuelve JWT
-- [ ] Endpoint `POST /usuarios` — registro de alumno/coach
-- [ ] Endpoint `GET /clases` — lista de próximas clases
-- [ ] Endpoint `POST /reservas` — el alumno se apunta
-- [ ] Endpoint `GET /reservas/:claseId` — aforo por clase
-- [ ] Despliegue a producción en Cloudflare
+- [ ] Insertar y validar datos de prueba en Neon (base de datos)
+- [ ] Conectar directamente aplicación en local (front/back)
+- [ ] Añadir paginación / filtros si se necesitan más adelante
+- [ ] Despliegue final a servidor de producción Cloudflare Workers
