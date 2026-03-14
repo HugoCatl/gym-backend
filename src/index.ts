@@ -65,6 +65,10 @@ export default {
             rol: user.rol,
             medPaper: user.medPaper,
             consentPaper: user.consentPaper,
+            onboardingCompletado: user.onboardingCompletado, // Dato clave para el Guard de Angular
+            sexo: user.sexo,
+            edad: user.edad,
+            telefono: user.telefono,
           }
         });
       }
@@ -108,7 +112,10 @@ export default {
             rol: schema.usuarios.rol,
             grupo: schema.usuarios.grupo,
             medPaper: schema.usuarios.medPaper,
-            consentPaper: schema.usuarios.consentPaper
+            consentPaper: schema.usuarios.consentPaper,
+            onboardingCompletado: schema.usuarios.onboardingCompletado,
+            telefono: schema.usuarios.telefono,
+            edad: schema.usuarios.edad,
           }).from(schema.usuarios);
           return jsonResponse({ status: "success", data: listaUsuarios });
         }

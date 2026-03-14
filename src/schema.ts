@@ -11,6 +11,20 @@ export const usuarios = pgTable('usuarios', {
   grupo: text('grupo'), // Ej: 'Adultos mañanas' (puede ser nulo para el coach)
   medPaper: boolean('med_paper').default(false),
   consentPaper: boolean('consent_paper').default(false),
+  
+  // Nuevos campos de perfil (Onboarding)
+  sexo: varchar('sexo', { length: 20 }), // Ej. "masculino", "femenino", "otro"
+  edad: integer('edad'),
+  telefono: varchar('telefono', { length: 20 }),
+  
+  // Consentimientos y Legales
+  consentimientoDatos: boolean('consentimiento_datos').default(false),
+  consentimientoFotos: boolean('consentimiento_fotos').default(false),
+  consentimientoRiesgos: boolean('consentimiento_riesgos').default(false),
+  
+  // Flag útil para el Frontend: indica si ya completó el onboarding
+  onboardingCompletado: boolean('onboarding_completado').default(false),
+
   createdAt: timestamp('created_at').defaultNow(),
 });
 
