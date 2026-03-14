@@ -1,6 +1,6 @@
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
-import { eq } from 'drizzle-orm';
+import { eq, count, and, gte, lte } from 'drizzle-orm';
 import * as schema from './schema';
 
 export interface Env {
@@ -146,6 +146,46 @@ export default {
             claseId: body.claseId
           }).returning();
           return jsonResponse({ status: "success", data: nuevaReserva[0] }, 201);
+        }
+      }
+
+      // 5. ENDPOINTS: ESTADÍSTICAS (Asistencias y racha)
+      if (path.startsWith('/api/estadisticas/')) {
+        if (request.method === 'GET') {
+          const id = path.split('/').pop() || '';
+          if (!id) return errorResponse("ID de usuario requerido", 400);
+
+          // Calcular primer y último día del mes actual
+          const date = new Date();
+          const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+          const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+
+          const formatDt = (d: Date) => d.toISOString().split('T')[0];
+          const primerDiaMes = formatDt(firstDay);
+          const ultimoDiaMes = formatDt(lastDay);
+
+          const result = await db.select({
+            totalMes: count(schema.asistencias.id)
+          })
+          .from(schema.asistencias)
+          .where(
+            and(
+              eq(schema.asistencias.usuarioId, id),
+              gte(schema.asistencias.fecha, primerDiaMes),
+              lte(schema.asistencias.fecha, ultimoDiaMes)
+            )
+          );
+
+          // También podríamos calcular la racha (días seguidos visitando el gym) u obtener la última.
+          // Por el momento, devuelvo lo básico para conectar el Front:
+          return jsonResponse({
+            status: "success",
+            data: {
+              asistenciasEsteMes: result[0]?.totalMes || 0,
+              rachaActual: 0, 
+              ultimaAsistencia: null
+            }
+          });
         }
       }
 

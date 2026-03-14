@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, integer, boolean, timestamp, serial, date, time } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, text, integer, boolean, timestamp, serial, date, time, varchar } from 'drizzle-orm/pg-core';
 
 // 1. Tabla Central de Usuarios (Sirve tanto para Abuelos como para el Coach)
 export const usuarios = pgTable('usuarios', {
@@ -31,4 +31,14 @@ export const reservas = pgTable('reservas', {
   claseId: integer('clase_id').references(() => clasesProgramadas.id).notNull(),
   fechaReserva: timestamp('fecha_reserva').defaultNow(),
   estado: text('estado').default('apuntado').notNull(), // 'apuntado' | 'asistio' | 'falta'
+});
+
+// 4. Tabla de Asistencias Reales (Check-in real del alumno en el gimnasio)
+export const asistencias = pgTable('asistencias', {
+  id: serial('id').primaryKey(),
+  usuarioId: uuid('usuario_id').references(() => usuarios.id).notNull(),
+  claseId: integer('clase_id').references(() => clasesProgramadas.id), // Opcional si va por libre
+  fecha: date('fecha').notNull(), // Fecha real del entreno: YYYY-MM-DD
+  metodo: varchar('metodo', { length: 20 }).default('button'), // ej: "button", "qr"
+  createdAt: timestamp('created_at').defaultNow()
 });

@@ -26,6 +26,7 @@ const db = drizzle(sql, { schema });
 
 async function seed() {
     console.log("Limpiando datos antiguos...");
+    await db.delete(schema.asistencias);
     await db.delete(schema.reservas);
     await db.delete(schema.clasesProgramadas);
     await db.delete(schema.usuarios);
@@ -113,6 +114,32 @@ async function seed() {
             usuarioId: usuarios[2].id,
             claseId: clases[1].id,
             estado: "apuntado"
+        }
+    ]);
+
+    console.log("Insertando asistencias reales...");
+    
+    // Asistencias para hoy
+    await db.insert(schema.asistencias).values([
+        {
+            usuarioId: usuarios[1].id,
+            claseId: clases[0].id,
+            fecha: formatDt(today),
+            metodo: "qr"
+        },
+        // María tiene 2 asistencias (hoy y una de hace 2 días)
+        {
+            usuarioId: usuarios[2].id,
+            claseId: clases[1].id,
+            fecha: formatDt(today),
+            metodo: "button"
+        },
+        {
+            usuarioId: usuarios[2].id,
+            claseId: clases[1].id,
+            // Fecha de hace 2 días
+            fecha: formatDt(new Date(today.getTime() - (2 * 24 * 60 * 60 * 1000))),
+            metodo: "button"
         }
     ]);
 
